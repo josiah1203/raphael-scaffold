@@ -73,23 +73,30 @@ def main() -> int:
     time.sleep(8)
 
     client = httpx.Client(timeout=10.0)
-    checks: list[tuple[str, str, callable]] = [
-        ("GET", "http://127.0.0.1:8080/v1/config", lambda r: r.json().get("platform_name") == "Raphael"),
-        ("GET", "http://127.0.0.1:8080/v1/workspaces/default/modules", lambda r: "modules" in r.json()),
-        ("GET", "http://127.0.0.1:8080/v1/repos", lambda r: "repos" in r.json()),
-        ("GET", "http://127.0.0.1:8080/v1/reviews", lambda r: isinstance(r.json().get("reviews"), list)),
-        ("GET", "http://127.0.0.1:8080/v1/connectors", lambda r: "connected" in r.json()),
-        ("GET", "http://127.0.0.1:8080/v1/audit/timeline", lambda r: "events" in r.json()),
-        ("GET", "http://127.0.0.1:8080/v1/artifacts", lambda r: "artifacts" in r.json()),
-        ("GET", "http://127.0.0.1:8080/v1/ai/suggestions", lambda r: "suggestions" in r.json()),
-        ("GET", "http://127.0.0.1:8080/v1/admin/billing", lambda r: "plan" in r.json()),
-        ("GET", "http://127.0.0.1:8080/v1/sync", lambda r: r.status_code == 200),
-        ("GET", "http://127.0.0.1:8080/v1/ops", lambda r: r.status_code == 200),
-        ("GET", "http://127.0.0.1:8080/v1/rwu/balance", lambda r: r.status_code == 200),
+    checks: list[tuple[str, str, callable, dict | None]] = [
+        ("GET", "http://127.0.0.1:8080/v1/config", lambda r: r.json().get("platform_name") == "Raphael", None),
+        ("GET", "http://127.0.0.1:8080/v1/workspaces/default/modules", lambda r: "modules" in r.json(), None),
+        ("GET", "http://127.0.0.1:8080/v1/repos", lambda r: "repos" in r.json(), None),
+        ("GET", "http://127.0.0.1:8080/v1/reviews", lambda r: isinstance(r.json().get("reviews"), list), None),
+        ("GET", "http://127.0.0.1:8080/v1/connectors", lambda r: "connected" in r.json(), None),
+        ("GET", "http://127.0.0.1:8080/v1/audit/timeline", lambda r: "events" in r.json(), None),
+        ("GET", "http://127.0.0.1:8080/v1/artifacts", lambda r: "artifacts" in r.json(), None),
+        ("GET", "http://127.0.0.1:8080/v1/graph/edges", lambda r: "edges" in r.json(), None),
+        ("GET", "http://127.0.0.1:8080/v1/ai/jobs", lambda r: "jobs" in r.json(), None),
+        ("GET", "http://127.0.0.1:8080/v1/admin/billing", lambda r: "plan" in r.json(), None),
+        ("GET", "http://127.0.0.1:8080/v1/ops", lambda r: r.status_code == 200, None),
+        ("POST", "http://127.0.0.1:8080/v1/ops/replay", lambda r: r.status_code in (200, 422), {"event_ids": []}),
+        ("GET", "http://127.0.0.1:8080/v1/rwu/balance", lambda r: r.status_code == 200, None),
+        (
+            "POST",
+            "http://127.0.0.1:8080/v1/identity/login",
+            lambda r: r.status_code == 200 and "access_token" in r.json(),
+            {"email": "dev@raphael.app", "password": "raphaeldev1"},
+        ),
     ]
     failed = 0
-    for method, url, assert_fn in checks:
-        res = client.request(method, url)
+    for method, url, assert_fn, body in checks:
+        res = client.request(method, url, json=body)
         ok = res.status_code < 500 and (res.status_code < 400 or url.endswith("/rwu/balance"))
         try:
             ok = ok and assert_fn(res)
