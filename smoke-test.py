@@ -20,9 +20,12 @@ SERVICES = [
     ("raphael-automation", 8095, "raphael_automation.app:app"),
     ("raphael-connectors", 8096, "raphael_connectors.app:app"),
     ("raphael-audit", 8093, "raphael_audit.app:app"),
+    ("raphael-artifacts", 8107, "raphael_artifacts.app:app"),
     ("raphael-graph", 8100, "raphael_graph.app:app"),
+    ("raphael-ai", 8104, "raphael_ai.app:app"),
     ("raphael-sync", 8098, "raphael_sync.app:app"),
     ("raphael-ops", 8103, "raphael_ops.app:app"),
+    ("raphael-admin", 8106, "raphael_admin.app:app"),
     ("raphael-rwu", 8101, "raphael_rwu.app:app"),
 ]
 
@@ -43,6 +46,9 @@ def start(name: str, port: int, app: str) -> None:
             "RAPHAEL_CONNECTORS_URL": "http://127.0.0.1:8096",
             "RAPHAEL_AUDIT_URL": "http://127.0.0.1:8093",
             "RAPHAEL_GRAPH_URL": "http://127.0.0.1:8100",
+            "RAPHAEL_AI_URL": "http://127.0.0.1:8104",
+            "RAPHAEL_ADMIN_URL": "http://127.0.0.1:8106",
+            "RAPHAEL_ARTIFACTS_URL": "http://127.0.0.1:8107",
             "RAPHAEL_SYNC_URL": "http://127.0.0.1:8098",
             "RAPHAEL_OPS_URL": "http://127.0.0.1:8103",
             "RAPHAEL_RWU_URL": "http://127.0.0.1:8101",
@@ -64,7 +70,7 @@ def main() -> int:
     for name, port, app in SERVICES:
         start(name, port, app)
     start("raphael-core", 8080, "raphael_core.app:app")
-    time.sleep(4)
+    time.sleep(8)
 
     client = httpx.Client(timeout=10.0)
     checks: list[tuple[str, str, callable]] = [
@@ -74,6 +80,9 @@ def main() -> int:
         ("GET", "http://127.0.0.1:8080/v1/reviews", lambda r: isinstance(r.json().get("reviews"), list)),
         ("GET", "http://127.0.0.1:8080/v1/connectors", lambda r: "connected" in r.json()),
         ("GET", "http://127.0.0.1:8080/v1/audit/timeline", lambda r: "events" in r.json()),
+        ("GET", "http://127.0.0.1:8080/v1/artifacts", lambda r: "artifacts" in r.json()),
+        ("GET", "http://127.0.0.1:8080/v1/ai/suggestions", lambda r: "suggestions" in r.json()),
+        ("GET", "http://127.0.0.1:8080/v1/admin/billing", lambda r: "plan" in r.json()),
         ("GET", "http://127.0.0.1:8080/v1/sync", lambda r: r.status_code == 200),
         ("GET", "http://127.0.0.1:8080/v1/ops", lambda r: r.status_code == 200),
         ("GET", "http://127.0.0.1:8080/v1/rwu/balance", lambda r: r.status_code == 200),
