@@ -1,0 +1,46 @@
+{
+  "version": "1",
+  "description": "Raphael polyrepo manifest for CI checkout and smoke tests",
+  "projects_root_env": "RAPHAEL_PROJECTS_ROOT",
+  "default_projects_root": "~/Projects",
+  "test_summary": {
+    "total_pytest_functions": 315,
+    "repos_with_tests": 23,
+    "smoke_target": 80
+  },
+  "repos": [
+    {"name": "raphael-contracts", "required": true, "test": "uv run pytest -q", "test_count": 45},
+    {"name": "raphael-core", "required": true, "port": 8080, "test": "uv run pytest -q", "test_count": 11},
+    {"name": "raphael-identity", "required": true, "port": 8081, "test": "uv run pytest -q", "test_count": 11},
+    {"name": "raphael-orgs", "required": true, "port": 8082, "test": "uv run pytest -q", "test_count": 10},
+    {"name": "raphael-workspaces", "required": true, "port": 8083, "test": "uv run pytest -q", "test_count": 30},
+    {"name": "raphael-reviews", "required": true, "port": 8087, "test": "uv run pytest -q", "test_count": 14},
+    {"name": "raphael-comments", "required": true, "port": 8088, "test": "uv run pytest -q", "test_count": 8},
+    {"name": "raphael-messaging", "required": true, "port": 8089, "test": "uv run pytest -q", "test_count": 8},
+    {"name": "raphael-notifications", "required": true, "port": 8090, "test": "uv run pytest -q", "test_count": 14},
+    {"name": "raphael-links", "required": true, "port": 8091, "test": "uv run pytest -q", "test_count": 6},
+    {"name": "raphael-audit", "required": true, "port": 8093, "test": "uv run pytest -q", "test_count": 9},
+    {"name": "raphael-automation", "required": true, "port": 8095, "test": "uv run pytest -q", "test_count": 16},
+    {"name": "raphael-connectors", "required": true, "port": 8096, "test": "uv run pytest -q", "test_count": 10},
+    {"name": "raphael-registry", "required": true, "port": 8097, "test": "uv run pytest -q", "test_count": 6},
+    {"name": "raphael-sync", "required": true, "port": 8098, "test": "uv run pytest -q", "test_count": 5},
+    {"name": "raphael-graph", "required": true, "port": 8100, "test": "uv run pytest -q", "test_count": 6},
+    {"name": "raphael-rwu", "required": true, "port": 8101, "test": "uv run pytest -q", "test_count": 7},
+    {"name": "raphael-environments", "required": true, "port": 8102, "test": "uv run pytest -q", "test_count": 6},
+    {"name": "raphael-ops", "required": true, "port": 8103, "test": "uv run pytest -q", "test_count": 9},
+    {"name": "raphael-ai", "required": true, "port": 8104, "test": "uv run pytest -q", "test_count": 52},
+    {"name": "raphael-analytics", "required": true, "port": 8105, "test": "uv run pytest -q", "test_count": 4},
+    {"name": "raphael-admin", "required": true, "port": 8106, "test": "uv run pytest -q", "test_count": 15},
+    {"name": "raphael-artifacts", "required": true, "port": 8107, "test": "uv run pytest -q", "test_count": 23},
+    {"name": "raphael-ui", "required": false, "port": 5173},
+    {"name": "raphael-devplatform", "required": false},
+    {"name": "raphael-infra", "required": false},
+    {"name": "raphael-scaffold", "required": true}
+  ],
+  "deprecated": [
+    "raphael-slice",
+    "raphael-licensing",
+    "raphael-search",
+    "raphael-workflows"
+  ]
+}

@@ -1,0 +1,146 @@
+name: Platform CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  RAPHAEL_PROJECTS_ROOT: ${{ github.workspace }}
+
+jobs:
+  stub-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: raphael-scaffold
+      - name: Checkout sibling repos
+        run: python3 raphael-scaffold/checkout-polyrepo.py
+        env:
+          RAPHAEL_PROJECTS_ROOT: ${{ github.workspace }}
+      - name: Run stub gate (baseline allowlist)
+        run: python3 raphael-scaffold/scripts/stub-gate.py --fail
+        env:
+          RAPHAEL_PROJECTS_ROOT: ${{ github.workspace }}
+      - name: Test stub-gate scanner
+        run: uv run --with pytest pytest -q raphael-scaffold/tests/test_stub_gate.py
+        env:
+          RAPHAEL_PROJECTS_ROOT: ${{ github.workspace }}
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        repo:
+          - raphael-contracts
+          - raphael-core
+          - raphael-identity
+          - raphael-orgs
+          - raphael-workspaces
+          - raphael-audit
+          - raphael-graph
+          - raphael-ai
+          - raphael-reviews
+          - raphael-comments
+          - raphael-messaging
+          - raphael-links
+          - raphael-registry
+          - raphael-environments
+          - raphael-rwu
+          - raphael-artifacts
+          - raphael-automation
+          - raphael-connectors
+          - raphael-notifications
+          - raphael-ops
+          - raphael-admin
+          - raphael-analytics
+          - raphael-sync
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: raphael-scaffold
+      - name: Checkout sibling repos
+        run: python3 raphael-scaffold/checkout-polyrepo.py
+        env:
+          RAPHAEL_PROJECTS_ROOT: ${{ github.workspace }}
+      - uses: astral-sh/setup-uv@v5
+      - name: Sync contracts
+        run: uv sync
+        working-directory: raphael-contracts
+      - name: Run unit tests
+        run: |
+          if [ -d "${{ matrix.repo }}/tests" ]; then
+            cd "${{ matrix.repo }}" && uv sync && uv run pytest -q
+          else
+            echo "No tests in ${{ matrix.repo }}"
+          fi
+
+  ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: raphael-scaffold
+      - name: Checkout sibling repos
+        run: python3 raphael-scaffold/checkout-polyrepo.py
+        env:
+          RAPHAEL_PROJECTS_ROOT: ${{ github.workspace }}
+      - name: Checkout optional UI dependencies
+        run: |
+          ORG="${RAPHAEL_GITHUB_ORG:-hummingbird-labs}"
+          for repo in raphael-ui raphael-devplatform; do
+            if [ ! -d "$repo" ]; then
+              git clone --depth 1 "https://github.com/${ORG}/${repo}.git" "$repo" || true
+            fi
+          done
+        env:
+          RAPHAEL_GITHUB_ORG: ${{ vars.RAPHAEL_GITHUB_ORG || 'hummingbird-labs' }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: raphael-ui/package-lock.json
+      - name: Install and verify UI
+        working-directory: raphael-ui
+        run: |
+          if [ ! -f package.json ]; then
+            echo "raphael-ui not available — skipping"
+            exit 0
+          fi
+          npm ci
+          npm run check:ds
+          npm run test
+          npm run build
+
+  smoke:
+    needs: [unit-tests, ui]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: raphael-scaffold
+      - name: Checkout sibling repos
+        run: python3 raphael-scaffold/checkout-polyrepo.py
+      - uses: astral-sh/setup-uv@v5
+      - name: Install contracts + httpx
+        run: |
+          cd raphael-contracts && uv sync
+          uv pip install httpx
+      - name: Sync all service deps
+        run: |
+          for repo in raphael-core raphael-identity raphael-orgs raphael-workspaces \
+            raphael-reviews raphael-notifications raphael-automation raphael-connectors \
+            raphael-audit raphael-artifacts raphael-graph raphael-ai raphael-sync \
+            raphael-ops raphael-admin raphael-rwu raphael-comments raphael-messaging \
+            raphael-links raphael-registry raphael-environments raphael-analytics; do
+            (cd "$repo" && uv sync) || true
+          done
+      - name: Run integration smoke test
+        run: python3 raphael-scaffold/smoke-test.py
+        env:
+          RAPHAEL_MODEL_BACKEND: stub
+          RAPHAEL_LOG_FORMAT: json

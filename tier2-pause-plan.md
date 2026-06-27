@@ -1,20 +1,34 @@
-# Tier-2 Stub Pause Notes
+# Tier-2 Domain Services — Complete
 
-Calliope does not provide standalone source packages for these domains, so Raphael keeps them paused rather than extending SQLite scaffolds:
+Phase 4 removed the gateway **501 pause**. Tier-2 services are live with domain models, Kafka events, SDK methods, and UI detail routes.
 
-- `comments`
-- `messaging`
-- `links`
-- `workflows`
-- `registry`
-- `environments`
-- `analytics`
-- `search`
+| Service | Repo | Depth |
+|---------|------|-------|
+| **comments** | `raphael-comments` | Threading, anchors, target ACLs, `raphael.comments.created` |
+| **messaging** | `raphael-messaging` | Review/module binding, Twilio optional, review event consumer |
+| **links** | `raphael-links` | Typed source/target refs, graph edge on create |
+| **registry** | `raphael-registry` | Semver manifests, module pins |
+| **environments** | `raphael-environments` | Named configs, promotion stages, automation triggers |
 
-Gateway behavior in `raphael-core` now returns `501 not_implemented` for `/v1/<service>` requests above, with a response message indicating the endpoint is paused pending Calliope parity.
+## Folded elsewhere
 
-Near-term ownership:
+| Capability | Owner |
+|------------|-------|
+| Search / ask | `raphael-ai` intelligence |
+| Workflows | `raphael-automation` |
+| Analytics overview | `raphael-analytics` |
 
-- search concerns should fold into `raphael-audit` / `raphael-graph`
-- licensing and billing concerns should fold into `raphael-admin` / `raphael-orgs`
-- slice/fork concerns should stay thin wrappers around `raphael-workspaces`
+## Deprecated repos
+
+See `ARCHIVED.md` in each:
+
+- `raphael-slice` → `raphael-workspaces`
+- `raphael-licensing` → `raphael-admin` / `raphael-orgs`
+- `raphael-search` → audit/graph/intelligence
+- `raphael-workflows` → `raphael-automation`
+
+## Tests
+
+Each tier-2 repo has domain tests (`tests/test_*.py`). The integration smoke test in `raphael-scaffold/smoke-test.py` covers gateway routes for all five services.
+
+**This document supersedes the original tier-2 pause plan.** No further 501 stubs are planned.

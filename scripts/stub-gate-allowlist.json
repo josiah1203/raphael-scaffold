@@ -1,0 +1,4 @@
+{
+  "description": "Known production stub violations tracked for Wave 1 removal. New violations fail CI.",
+  "violations": []
+}
