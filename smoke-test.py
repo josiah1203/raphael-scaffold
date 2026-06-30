@@ -126,7 +126,7 @@ def start(name: str, port: int, app: str) -> None:
             "RAPHAEL_GEMMA_MODEL": os.environ.get("RAPHAEL_GEMMA_MODEL", "gemma2:2b"),
             "RAPHAEL_JWT_SECRET": "dev-secret-with-32-byte-minimum-length!!",
             "RAPHAEL_LOG_FORMAT": "json",
-            "RAPHAEL_KAFKA_DISABLED": "1",
+            "RAPHAEL_KAFKA_DISABLED": os.environ.get("RAPHAEL_KAFKA_DISABLED", "1"),
         }
     )
     db_url = os.environ.get("RAPHAEL_DATABASE_URL")
